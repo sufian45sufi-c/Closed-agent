@@ -4,7 +4,6 @@ export default function AuthModal({ isOpen, onClose, startInSignUp = false }) {
   const [isSignUp, setIsSignUp] = useState(startInSignUp);
   const [form, setForm] = useState({ username: "", email: "", password: "" });
 
-  // Reset mode whenever the modal is (re)opened
   useEffect(() => {
     if (isOpen) setIsSignUp(startInSignUp);
   }, [isOpen, startInSignUp]);
@@ -16,7 +15,6 @@ export default function AuthModal({ isOpen, onClose, startInSignUp = false }) {
   };
 
   const handleSubmit = () => {
-    // Placeholder — will connect to real auth (NextAuth, Supabase, etc.) later
     console.log(isSignUp ? "Sign up:" : "Log in:", form);
   };
 
@@ -37,7 +35,7 @@ export default function AuthModal({ isOpen, onClose, startInSignUp = false }) {
           ✕
         </button>
 
-        <div className="mb-10 text-lg font-bold tracking-tight">Weby.</div>
+        <div className="mb-10 text-lg font-bold tracking-tight">Closed.</div>
 
         <h1
           className="text-4xl mb-8"
