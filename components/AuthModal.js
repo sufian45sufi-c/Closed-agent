@@ -1,9 +1,10 @@
-import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 
 export default function AuthModal({ isOpen, onClose, startInSignUp = false }) {
   const [isSignUp, setIsSignUp] = useState(startInSignUp);
   const [form, setForm] = useState({ username: "", email: "", password: "" });
+  const router = useRouter();
 
   useEffect(() => {
     if (isOpen) setIsSignUp(startInSignUp);
@@ -16,7 +17,10 @@ export default function AuthModal({ isOpen, onClose, startInSignUp = false }) {
   };
 
   const handleSubmit = () => {
+    // Placeholder — real auth check will go here later
     console.log(isSignUp ? "Sign up:" : "Log in:", form);
+    onClose();
+    router.push("/chat");
   };
 
   return (
