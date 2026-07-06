@@ -7,10 +7,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { message } = req.body;
+  const { messages } = req.body;
 
-  if (!message) {
-    return res.status(400).json({ error: "Message is required" });
+  if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: "Messages array is required" });
   }
 
   res.writeHead(200, {
@@ -25,9 +25,9 @@ export default async function handler(req, res) {
         {
           role: "system",
           content:
-            "You are Closed Agent, an AI assistant powered by Groq's fast inference. Be helpful, concise, and clear.",
+            "You are Closed Agent, an AI assistant powered by Groq's fast inference. Be helpful, concise, and clear. Use the full conversation history to stay consistent and remember what the user has told you earlier in this chat.",
         },
-        { role: "user", content: message },
+        ...messages,
       ],
       model: "llama-3.3-70b-versatile",
       stream: true,
