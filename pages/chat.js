@@ -4,7 +4,8 @@ import { useRouter } from "next/router";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { ref, get, set, push, remove } from "firebase/database";
 import { auth, db } from "../lib/firebaseClient";
-import { FormattedText, CanvasPanel, ModelDropdown, ChatListItem } from "../components/ChatWidgets";
+import { FormattedText, ModelDropdown, ChatListItem } from "../components/ChatWidgets";
+import CodeWorkspace from "../components/CodeWorkspace";
 
 function deriveTitle(text) {
   const trimmed = text.trim();
@@ -39,7 +40,7 @@ export default function Chat() {
 
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [attachments, setAttachments] = useState([]); // [{ name, content }]
+  const [attachments, setAttachments] = useState([]);
   const [attachError, setAttachError] = useState("");
 
   const [effort, setEffort] = useState("medium");
@@ -47,7 +48,7 @@ export default function Chat() {
   const [persona, setPersona] = useState("pixel");
   const [memorySummary, setMemorySummary] = useState("");
 
-  const [canvas, setCanvas] = useState(null);
+  const [workspace, setWorkspace] = useState(null); // { files: {name: code}, activeFile }
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const bottomRef = useRef(null);
@@ -124,14 +125,14 @@ export default function Chat() {
   const handleNewChat = () => {
     setActiveChatId(null);
     setMessages([]);
-    setCanvas(null);
+    setWorkspace(null);
     setAttachments([]);
   };
 
   const handleSelectChat = (id) => {
     setActiveChatId(id);
     setMessages(chatsData[id]?.messages || []);
-    setCanvas(null);
+    setWorkspace(null);
     setAttachments([]);
   };
 
@@ -153,13 +154,16 @@ export default function Chat() {
     if (activeChatId === id) {
       setActiveChatId(null);
       setMessages([]);
-      setCanvas(null);
-      setAttachments([]);
+      setWorkspace(null);
     }
   };
 
-  const handleOpenCanvas = (code, language) => {
-    setCanvas({ code, language: language || "text" });
+  const handleOpenWorkspace = (blocks, clickedFilename) => {
+    const filesObj = {};
+    blocks.forEach((b) => {
+      filesObj[b.filename] = b.code;
+    });
+    setWorkspace({ files: filesObj, activeFile: clickedFilename });
   };
 
   const handleAttachClick = () => {
@@ -436,10 +440,7 @@ export default function Chat() {
             </>
           ) : (
             <div className="flex flex-col items-center gap-6 mb-6">
-              <button
-                onClick={handleNewChat}
-                className="text-zinc-400 hover:text-white transition-colors"
-              >
+              <button onClick={handleNewChat} className="text-zinc-400 hover:text-white transition-colors">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -463,10 +464,7 @@ export default function Chat() {
 
         <main className="flex-1 flex flex-col h-full relative overflow-hidden">
           <header className="h-16 flex items-center px-4 border-b border-zinc-800 shrink-0">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="mr-4 p-2 text-zinc-400 hover:text-white transition"
-            >
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="mr-4 p-2 text-zinc-400 hover:text-white transition">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M3 12h18M3 6h18M3 18h18" />
               </svg>
@@ -493,17 +491,12 @@ export default function Chat() {
 
               {messages.map((msg, i) => (
                 <div key={i} className={`max-w-2xl ${msg.sender === "user" ? "ml-auto" : ""}`}>
-                  <div className="text-[10px] uppercase tracking-widest text-zinc-600 mb-1">
-                    {msg.sender}
-                  </div>
+                  <div className="text-[10px] uppercase tracking-widest text-zinc-600 mb-1">{msg.sender}</div>
 
                   {msg.sender === "user" && msg.attachedFiles && msg.attachedFiles.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-2 justify-end">
                       {msg.attachedFiles.map((name, idx) => (
-                        <span
-                          key={idx}
-                          className="text-[10px] bg-zinc-800 border border-zinc-700 rounded-full px-3 py-1 text-zinc-300"
-                        >
+                        <span key={idx} className="text-[10px] bg-zinc-800 border border-zinc-700 rounded-full px-3 py-1 text-zinc-300">
                           📎 {name}
                         </span>
                       ))}
@@ -512,9 +505,7 @@ export default function Chat() {
 
                   {msg.sender === "agent" && msg.reasoning && (
                     <details className="mb-2 text-xs text-zinc-500 border border-zinc-800 rounded-lg px-3 py-2">
-                      <summary className="cursor-pointer uppercase tracking-widest text-[10px]">
-                        Thinking
-                      </summary>
+                      <summary className="cursor-pointer uppercase tracking-widest text-[10px]">Thinking</summary>
                       <div className="mt-2 whitespace-pre-wrap italic">{msg.reasoning}</div>
                     </details>
                   )}
@@ -524,7 +515,7 @@ export default function Chat() {
                       msg.sender === "user" ? "text-right" : ""
                     }`}
                   >
-                    <FormattedText text={msg.text} onOpenCanvas={handleOpenCanvas} />
+                    <FormattedText text={msg.text} onOpenWorkspace={handleOpenWorkspace} />
                     {isStreaming && msg.sender === "agent" && i === messages.length - 1 && (
                       <span className="inline-block w-1.5 h-4 bg-white ml-1 animate-pulse align-middle" />
                     )}
@@ -546,10 +537,7 @@ export default function Chat() {
                       className="flex items-center gap-2 text-[11px] bg-zinc-800 border border-zinc-700 rounded-full pl-3 pr-2 py-1 text-zinc-300"
                     >
                       📎 {a.name}
-                      <button
-                        onClick={() => removeAttachment(a.name)}
-                        className="text-zinc-500 hover:text-white transition-colors"
-                      >
+                      <button onClick={() => removeAttachment(a.name)} className="text-zinc-500 hover:text-white transition-colors">
                         ✕
                       </button>
                     </span>
@@ -557,9 +545,7 @@ export default function Chat() {
                 </div>
               )}
 
-              {attachError && (
-                <div className="px-2 text-[11px] text-red-400">{attachError}</div>
-              )}
+              {attachError && <div className="px-2 text-[11px] text-red-400">{attachError}</div>}
 
               <textarea
                 rows={2}
@@ -614,12 +600,11 @@ export default function Chat() {
           </div>
         </main>
 
-        {canvas && (
-          <CanvasPanel
-            code={canvas.code}
-            language={canvas.language}
-            onChange={(newCode) => setCanvas({ ...canvas, code: newCode })}
-            onClose={() => setCanvas(null)}
+        {workspace && (
+          <CodeWorkspace
+            initialFiles={workspace.files}
+            initialActive={workspace.activeFile}
+            onClose={() => setWorkspace(null)}
           />
         )}
       </div>
