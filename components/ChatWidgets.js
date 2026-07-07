@@ -25,33 +25,33 @@ export function CodeBlock({ code, language, onOpenCanvas }) {
   };
 
   return (
-    <div className="my-3 rounded-lg overflow-hidden border border-neutral-800">
-      <div className="flex items-center justify-between bg-neutral-800 px-4 py-2">
-        <span className="text-[10px] uppercase tracking-widest text-neutral-400">
+    <div className="my-3 rounded-xl overflow-hidden border border-zinc-800">
+      <div className="flex items-center justify-between bg-zinc-900 px-4 py-2 border-b border-zinc-800">
+        <span className="text-[10px] uppercase tracking-widest text-zinc-500">
           {language || "code"}
         </span>
         <div className="flex gap-3">
           <button
             onClick={() => onOpenCanvas(code, language)}
-            className="text-[10px] uppercase tracking-widest text-neutral-400 hover:text-white transition-colors"
+            className="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
           >
             Open editor
           </button>
           <button
             onClick={handleCopy}
-            className="text-[10px] uppercase tracking-widest text-neutral-400 hover:text-white transition-colors"
+            className="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
           >
             {copied ? "Copied ✓" : "Copy"}
           </button>
           <button
             onClick={handleDownload}
-            className="text-[10px] uppercase tracking-widest text-neutral-400 hover:text-white transition-colors"
+            className="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
           >
             Download
           </button>
         </div>
       </div>
-      <pre className="bg-neutral-900 text-neutral-100 p-4 overflow-x-auto text-xs leading-relaxed">
+      <pre className="bg-zinc-950 text-zinc-100 p-4 overflow-x-auto text-xs leading-relaxed">
         <code>{code}</code>
       </pre>
     </div>
@@ -101,18 +101,18 @@ export function CanvasPanel({ code, language, onChange, onClose }) {
   }, [code, language, canPreview]);
 
   return (
-    <div className="w-[45%] min-w-[360px] border-l border-neutral-200 flex flex-col h-screen shrink-0 bg-white">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 shrink-0">
+    <div className="w-[45%] min-w-[360px] border-l border-zinc-800 flex flex-col h-screen shrink-0 bg-zinc-950">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 shrink-0">
         <div className="flex items-center gap-3">
-          <span className="text-xs font-medium uppercase tracking-widest text-neutral-500">
+          <span className="text-xs font-medium uppercase tracking-widest text-zinc-400">
             {language || "code"}
           </span>
           {canPreview && (
-            <div className="flex rounded-full border border-neutral-200 overflow-hidden text-[10px]">
+            <div className="flex rounded-full border border-zinc-800 overflow-hidden text-[10px]">
               <button
                 onClick={() => setTab("preview")}
                 className={`px-3 py-1 uppercase tracking-widest transition-colors ${
-                  tab === "preview" ? "bg-neutral-900 text-white" : "text-neutral-500"
+                  tab === "preview" ? "bg-white text-black" : "text-zinc-400"
                 }`}
               >
                 Preview
@@ -120,7 +120,7 @@ export function CanvasPanel({ code, language, onChange, onClose }) {
               <button
                 onClick={() => setTab("code")}
                 className={`px-3 py-1 uppercase tracking-widest transition-colors ${
-                  tab === "code" ? "bg-neutral-900 text-white" : "text-neutral-500"
+                  tab === "code" ? "bg-white text-black" : "text-zinc-400"
                 }`}
               >
                 Code
@@ -130,7 +130,7 @@ export function CanvasPanel({ code, language, onChange, onClose }) {
         </div>
         <button
           onClick={onClose}
-          className="text-neutral-400 hover:text-neutral-900 transition-colors text-sm"
+          className="text-zinc-500 hover:text-white transition-colors text-sm"
         >
           ✕
         </button>
@@ -149,7 +149,7 @@ export function CanvasPanel({ code, language, onChange, onClose }) {
             value={code}
             onChange={(e) => onChange(e.target.value)}
             spellCheck={false}
-            className="w-full h-full p-4 bg-neutral-900 text-neutral-100 text-xs font-mono leading-relaxed resize-none focus:outline-none"
+            className="w-full h-full p-4 bg-zinc-950 text-zinc-100 text-xs font-mono leading-relaxed resize-none focus:outline-none"
           />
         )}
       </div>
@@ -198,87 +198,87 @@ export function ModelDropdown({ persona, setPersona, effort, setEffort, thinking
           setOpen(!open);
           setShowEffort(false);
         }}
-        className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-full border border-neutral-200 hover:border-neutral-400 transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 rounded-full text-[11px] text-zinc-300 border border-zinc-700 hover:bg-zinc-700 transition"
       >
         <span className="font-medium">{activePersona?.label}</span>
-        <span className="text-neutral-400">{activeEffort?.label}</span>
-        <svg className="w-3 h-3 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        <span className="text-zinc-500">{activeEffort?.label}</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M6 9l6 6 6-6" />
         </svg>
       </button>
 
       {open && !showEffort && (
-        <div className="absolute bottom-full mb-2 left-0 w-72 bg-white border border-neutral-200 rounded-xl shadow-xl overflow-hidden z-50">
+        <div className="absolute bottom-full mb-2 left-0 w-64 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden z-50 p-2 text-[13px]">
           {PERSONAS.map((p) => (
-            <button
+            <div
               key={p.value}
               onClick={() => {
                 setPersona(p.value);
                 setOpen(false);
               }}
-              className="w-full text-left px-4 py-3 hover:bg-neutral-50 transition-colors flex items-center justify-between"
+              className={`p-2 rounded-lg cursor-pointer flex justify-between items-center ${
+                persona === p.value ? "bg-zinc-800" : "hover:bg-zinc-800"
+              }`}
             >
               <div>
-                <div className="text-sm font-medium">{p.label}</div>
-                <div className="text-xs text-neutral-400">{p.desc}</div>
+                <div className="font-medium">{p.label}</div>
+                <div className="text-zinc-500">{p.desc}</div>
               </div>
               {persona === p.value && (
-                <svg className="w-4 h-4 text-neutral-900 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <path d="M20 6L9 17l-5-5" />
                 </svg>
               )}
-            </button>
+            </div>
           ))}
 
-          <div className="border-t border-neutral-100">
-            <button
-              onClick={() => setShowEffort(true)}
-              className="w-full flex items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
-            >
-              <span className="text-sm font-medium">Effort</span>
-              <span className="text-xs text-neutral-400 flex items-center gap-1">
-                {activeEffort?.label}
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 18l6-6-6-6" />
-                </svg>
-              </span>
-            </button>
+          <div
+            onClick={() => setShowEffort(true)}
+            className="p-2 mt-1 border-t border-zinc-800 flex justify-between items-center cursor-pointer hover:bg-zinc-800 rounded-lg"
+          >
+            <span className="font-medium">Effort</span>
+            <span className="text-zinc-500 flex items-center gap-1">
+              {activeEffort?.label}
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </span>
           </div>
         </div>
       )}
 
       {open && showEffort && (
-        <div className="absolute bottom-full mb-2 left-0 w-72 bg-white border border-neutral-200 rounded-xl shadow-xl overflow-hidden z-50">
-          <button
+        <div className="absolute bottom-full mb-2 left-0 w-64 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden z-50 p-2 text-[13px]">
+          <div
             onClick={() => setShowEffort(false)}
-            className="w-full text-left px-4 py-3 text-xs text-neutral-400 hover:bg-neutral-50 transition-colors border-b border-neutral-100"
+            className="p-2 text-zinc-500 cursor-pointer hover:bg-zinc-800 rounded-lg border-b border-zinc-800 mb-1"
           >
             ← Back
-          </button>
+          </div>
           {EFFORTS.map((e) => (
-            <button
+            <div
               key={e.value}
               onClick={() => setEffort(e.value)}
-              className="w-full text-left px-4 py-3 hover:bg-neutral-50 transition-colors flex items-center justify-between"
+              className={`p-2 rounded-lg cursor-pointer flex justify-between items-center ${
+                effort === e.value ? "bg-zinc-800" : "hover:bg-zinc-800"
+              }`}
             >
-              <span className="text-sm">
+              <span>
                 {e.label}
-                {e.isDefault && (
-                  <span className="text-xs text-neutral-400 ml-2">Default</span>
-                )}
+                {e.isDefault && <span className="text-zinc-500 ml-2">Default</span>}
               </span>
               {effort === e.value && (
-                <svg className="w-4 h-4 text-neutral-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <path d="M20 6L9 17l-5-5" />
                 </svg>
               )}
-            </button>
+            </div>
           ))}
 
-          <div className="border-t border-neutral-100 px-4 py-3 flex items-center justify-between">
+          <div className="p-2 mt-1 border-t border-zinc-800 flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium">Thinking</div>
-              <div className="text-xs text-neutral-400">
+              <div className="font-medium">Thinking</div>
+              <div className="text-zinc-500 text-xs">
                 {isReasoningCapable ? "Show reasoning steps" : "Requires Extra or Max effort"}
               </div>
             </div>
@@ -286,12 +286,12 @@ export function ModelDropdown({ persona, setPersona, effort, setEffort, thinking
               onClick={() => isReasoningCapable && setThinking(!thinking)}
               disabled={!isReasoningCapable}
               className={`w-10 h-5.5 rounded-full transition-colors relative shrink-0 ${
-                thinking && isReasoningCapable ? "bg-neutral-900" : "bg-neutral-200"
+                thinking && isReasoningCapable ? "bg-white" : "bg-zinc-700"
               } ${!isReasoningCapable ? "opacity-40 cursor-not-allowed" : ""}`}
             >
               <div
-                className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-transform ${
-                  thinking && isReasoningCapable ? "translate-x-5" : "translate-x-0.5"
+                className={`w-4 h-4 rounded-full absolute top-0.5 transition-transform ${
+                  thinking && isReasoningCapable ? "translate-x-5 bg-black" : "translate-x-0.5 bg-white"
                 }`}
               />
             </button>
@@ -335,7 +335,7 @@ export function ChatListItem({ chat, isActive, onSelect, onRename, onDelete }) {
           if (e.key === "Enter") commitRename();
           if (e.key === "Escape") setRenaming(false);
         }}
-        className="w-full text-left px-4 py-2.5 rounded-lg text-sm mb-1 border border-neutral-300 focus:outline-none"
+        className="w-full text-left px-3 py-2 rounded-lg text-xs mb-1 bg-zinc-900 border border-zinc-700 text-white focus:outline-none"
       />
     );
   }
@@ -343,20 +343,20 @@ export function ChatListItem({ chat, isActive, onSelect, onRename, onDelete }) {
   return (
     <div
       className={`group relative flex items-center rounded-lg mb-1 transition-colors ${
-        isActive ? "bg-neutral-100" : "hover:bg-neutral-50"
+        isActive ? "bg-zinc-800" : "hover:bg-zinc-900"
       }`}
     >
       <button
         onClick={() => onSelect(chat.id)}
-        className={`flex-1 text-left px-4 py-2.5 text-sm truncate ${
-          isActive ? "font-medium" : "text-neutral-600"
+        className={`flex-1 text-left px-3 py-2 text-xs truncate ${
+          isActive ? "text-white font-medium" : "text-zinc-400"
         }`}
       >
         {chat.title}
       </button>
       <button
         onClick={() => setMenuOpen(!menuOpen)}
-        className="px-2 opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-neutral-900 transition-opacity"
+        className="px-2 opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-white transition-opacity"
       >
         ⋯
       </button>
@@ -364,14 +364,14 @@ export function ChatListItem({ chat, isActive, onSelect, onRename, onDelete }) {
       {menuOpen && (
         <div
           ref={menuRef}
-          className="absolute right-0 top-full mt-1 w-36 bg-white border border-neutral-200 rounded-lg shadow-lg z-50 overflow-hidden"
+          className="absolute right-0 top-full mt-1 w-32 bg-zinc-900 border border-zinc-800 rounded-lg shadow-lg z-50 overflow-hidden"
         >
           <button
             onClick={() => {
               setRenaming(true);
               setMenuOpen(false);
             }}
-            className="w-full text-left px-4 py-2 text-xs hover:bg-neutral-50 transition-colors"
+            className="w-full text-left px-3 py-2 text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
           >
             Rename
           </button>
@@ -380,7 +380,7 @@ export function ChatListItem({ chat, isActive, onSelect, onRename, onDelete }) {
               setMenuOpen(false);
               onDelete(chat.id);
             }}
-            className="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50 transition-colors"
+            className="w-full text-left px-3 py-2 text-xs text-red-400 hover:bg-red-950/40 transition-colors"
           >
             Delete
           </button>
