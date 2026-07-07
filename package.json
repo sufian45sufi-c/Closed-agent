@@ -14,6 +14,7 @@
     "react-dom": "18.3.1",
     "lucide-react": "0.408.0",
     "firebase": "10.13.0",
+    "@monaco-editor/react": "4.6.0",
     "groq-sdk": "0.5.0"
   },
   "devDependencies": {
