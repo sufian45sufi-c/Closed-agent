@@ -101,13 +101,20 @@ export default function Chat() {
       if (snap.exists()) {
         const data = snap.val();
         setChatsData(data);
-        const sortedIds = Object.keys(data).sort(
-          (a, b) => (data[b].updatedAt || 0) - (data[a].updatedAt || 0)
-        );
-        if (sortedIds.length > 0) {
-          const mostRecent = sortedIds[0];
-          setActiveChatId(mostRecent);
-          setMessages(data[mostRecent].messages || []);
+
+        const requestedChatId = router.query.open;
+        if (requestedChatId && data[requestedChatId]) {
+          setActiveChatId(requestedChatId);
+          setMessages(data[requestedChatId].messages || []);
+        } else {
+          const sortedIds = Object.keys(data).sort(
+            (a, b) => (data[b].updatedAt || 0) - (data[a].updatedAt || 0)
+          );
+          if (sortedIds.length > 0) {
+            const mostRecent = sortedIds[0];
+            setActiveChatId(mostRecent);
+            setMessages(data[mostRecent].messages || []);
+          }
         }
       }
 
@@ -127,7 +134,8 @@ export default function Chat() {
       setChecking(false);
     });
     return () => unsubscribe();
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.query.open]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -666,10 +674,7 @@ export default function Chat() {
         </main>
 
         {devWorkspaceOpen && (
-          <DevWorkspace
-            initialFiles={workspaceFiles}
-            onClose={() => setDevWorkspaceOpen(false)}
-          />
+          <DevWorkspace initialFiles={workspaceFiles} onClose={() => setDevWorkspaceOpen(false)} />
         )}
       </div>
     </>
