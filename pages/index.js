@@ -2,6 +2,21 @@ import Head from "next/head";
 import { useState, useEffect } from "react";
 import AuthModal from "../components/AuthModal";
 
+function ModelCard({ logo, name, description }) {
+  return (
+    <div className="flex flex-col items-center">
+      <img src={logo} alt={name} className="w-28 h-28 object-contain" />
+      <div className="w-px h-8 bg-[#333]" />
+      <div className="w-full p-6 border border-[#1f1f1f] rounded-2xl bg-[#0e0e0e] hover:border-white/20 transition-all text-center">
+        <h3 className="text-2xl mb-3" style={{ fontFamily: "'EB Garamond', serif" }}>
+          {name}
+        </h3>
+        <p className="text-[#9A9A9A] text-sm leading-relaxed">{description}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [scrolled, setScrolled] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
@@ -110,49 +125,21 @@ export default function Home() {
             Three models. One intelligence.
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="p-8 border border-[#1f1f1f] rounded-2xl hover:border-white/20 transition-all bg-[#0e0e0e]">
-              <img
-                src="/thread-logo.png"
-                alt="Thread 1.0"
-                className="w-16 h-16 object-contain mb-6"
-              />
-              <h3 className="text-2xl mb-4" style={{ fontFamily: "'EB Garamond', serif" }}>
-                Thread
-              </h3>
-              <p className="text-[#9A9A9A] text-sm leading-relaxed mb-8">
-                Ultra-fast reasoning for quick, direct answers.
-              </p>
-              <div className="w-full h-[1px] bg-[#1f1f1f] mb-6" />
-              <span className="text-[10px] uppercase tracking-widest text-[#9A9A9A]">Explore →</span>
-            </div>
-
-            <div className="p-8 border border-[#1f1f1f] rounded-2xl hover:border-white/20 transition-all bg-[#0e0e0e]">
-              <div className="w-16 h-16 mb-6 rounded-full border border-[#1f1f1f] flex items-center justify-center">
-                <span className="text-[10px] text-[#9A9A9A]">Pixel</span>
-              </div>
-              <h3 className="text-2xl mb-4" style={{ fontFamily: "'EB Garamond', serif" }}>
-                Pixel
-              </h3>
-              <p className="text-[#9A9A9A] text-sm leading-relaxed mb-8">
-                Sharp, structured, and precise — built for code.
-              </p>
-              <div className="w-full h-[1px] bg-[#1f1f1f] mb-6" />
-              <span className="text-[10px] uppercase tracking-widest text-[#9A9A9A]">Explore →</span>
-            </div>
-
-            <div className="p-8 border border-[#1f1f1f] rounded-2xl hover:border-white/20 transition-all bg-[#0e0e0e]">
-              <div className="w-16 h-16 mb-6 rounded-full border border-[#1f1f1f] flex items-center justify-center">
-                <span className="text-[10px] text-[#9A9A9A]">Cell</span>
-              </div>
-              <h3 className="text-2xl mb-4" style={{ fontFamily: "'EB Garamond', serif" }}>
-                Cell
-              </h3>
-              <p className="text-[#9A9A9A] text-sm leading-relaxed mb-8">
-                Creative, multi-step reasoning for complex problems.
-              </p>
-              <div className="w-full h-[1px] bg-[#1f1f1f] mb-6" />
-              <span className="text-[10px] uppercase tracking-widest text-[#9A9A9A]">Explore →</span>
-            </div>
+            <ModelCard
+              logo="/thread-logo.png"
+              name="Thread"
+              description="Ultra-fast reasoning for quick, direct answers."
+            />
+            <ModelCard
+              logo="/pixel-logo.png"
+              name="Pixel"
+              description="Sharp, structured, and precise — built for code."
+            />
+            <ModelCard
+              logo="/cell-logo.png"
+              name="Cell"
+              description="Creative, multi-step reasoning for complex problems."
+            />
           </div>
         </section>
 
