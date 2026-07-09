@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { WebContainer } from '@webcontainer/api';
-import { Terminal } from 'xterm';
-import { FitAddon } from 'xterm-addon-fit';
-import 'xterm/css/xterm.css';
+
+// Remove the import 'xterm' lines from the top of the file
 
 let webcontainerInstance = null;
 
@@ -13,18 +12,32 @@ export default function DevWorkspace() {
   const [previewUrl, setPreviewUrl] = useState('');
   const [activeFile, setActiveFile] = useState('index.js');
   
-  const [files, setFiles] = useState({
-    'package.json': {
-      file: {
-        contents: `{\n  "name": "fabion-preview",\n  "type": "module",\n  "dependencies": {\n    "express": "latest"\n  },\n  "scripts": {\n    "start": "node index.js"\n  }\n}`
-      },
-    },
-    'index.js': {
-      file: {
-        contents: `import express from 'express';\nconst app = express();\nconst port = 3111;\n\napp.get('/', (req, res) => {\n  res.send('Hello from Fabion WebContainers!');\n});\n\napp.listen(port, () => {\n  console.log('App is live at http://localhost:' + port);\n});`
-      },
-    },
-  });
+  // ... (keep your files state the same)
+
+  useEffect(() => {
+    let term;
+    let fitAddon;
+
+    const initWorkspace = async () => {
+      // DYNAMIC IMPORTS: Load these only when this code runs in the browser
+      const { Terminal } = await import('xterm');
+      const { FitAddon } = await import('xterm-addon-fit');
+      await import('xterm/css/xterm.css'); // Import CSS here
+
+      if (terminalRef.current && !term) {
+        term = new Terminal({
+          // ... (keep your existing terminal config)
+        });
+        // ... (keep rest of your init logic)
+      }
+      // ...
+    };
+
+    initWorkspace();
+    // ...
+  }, []);
+
+  // ... (keep the rest of the file exactly as it was)
 
   useEffect(() => {
     let term;
