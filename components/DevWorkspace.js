@@ -1,38 +1,26 @@
-import { useEffect, useRef, useState } from 'react';
-import Editor from '@monaco-editor/react';
-import { WebContainer } from '@webcontainer/api';
+import dynamic from 'next/dynamic';
+import { useState } from 'react';
 
-// Remove the import 'xterm' lines from the top of the file
-
-let webcontainerInstance = null;
+// This is the magic line that fixes your error
+const TerminalComponent = dynamic(() => import('./TerminalComponent'), {
+  ssr: false,
+});
 
 export default function DevWorkspace() {
-  const terminalRef = useRef(null);
-  const [booting, setBooting] = useState(true);
-  const [previewUrl, setPreviewUrl] = useState('');
-  const [activeFile, setActiveFile] = useState('index.js');
+  // ... rest of your logic ...
   
-  // ... (keep your files state the same)
-
-  useEffect(() => {
-    let term;
-    let fitAddon;
-
-    const initWorkspace = async () => {
-      // DYNAMIC IMPORTS: Load these only when this code runs in the browser
-      const { Terminal } = await import('xterm');
-      const { FitAddon } = await import('xterm-addon-fit');
-      await import('xterm/css/xterm.css'); // Import CSS here
-
-      if (terminalRef.current && !term) {
-        term = new Terminal({
-          // ... (keep your existing terminal config)
-        });
-        // ... (keep rest of your init logic)
-      }
-      // ...
-    };
-
+  return (
+    <div className="...">
+      {/* ... other parts ... */}
+      <div className="h-1/3">
+        <TerminalComponent onInit={(term) => {
+            // Your initialization logic here
+            term.writeln('Environment ready.');
+        }} />
+      </div>
+    </div>
+  );
+}
     initWorkspace();
     // ...
   }, []);
