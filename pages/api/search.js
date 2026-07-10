@@ -17,11 +17,12 @@ export default async function handler(req, res) {
         query,
         search_depth: "basic",
         max_results: 5,
+        include_images: true,
       }),
     });
 
     if (!response.ok) {
-      return res.status(200).json({ results: [], error: "Search unavailable right now." });
+      return res.status(200).json({ results: [], images: [], error: "Search unavailable right now." });
     }
 
     const data = await response.json();
@@ -30,10 +31,11 @@ export default async function handler(req, res) {
       url: r.url,
       snippet: r.content,
     }));
+    const images = (data.images || []).slice(0, 4);
 
-    res.status(200).json({ results });
+    res.status(200).json({ results, images });
   } catch (err) {
     console.error(err);
-    res.status(200).json({ results: [], error: "Search failed." });
+    res.status(200).json({ results: [], images: [], error: "Search failed." });
   }
 }
