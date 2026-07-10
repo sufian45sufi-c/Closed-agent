@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 
-export function CodeBlock({ code, language, onCopyOnly, onOpenWorkspace }) {
+export function CodeBlock({ code, language, onOpenWorkspace }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -27,26 +28,15 @@ export function CodeBlock({ code, language, onCopyOnly, onOpenWorkspace }) {
   return (
     <div className="my-3 rounded-xl overflow-hidden border border-zinc-800">
       <div className="flex items-center justify-between bg-zinc-900 px-4 py-2 border-b border-zinc-800">
-        <span className="text-[10px] uppercase tracking-widest text-zinc-500">
-          {language || "code"}
-        </span>
+        <span className="text-[10px] uppercase tracking-widest text-zinc-500">{language || "code"}</span>
         <div className="flex gap-3">
-          <button
-            onClick={onOpenWorkspace}
-            className="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
-          >
+          <button onClick={onOpenWorkspace} className="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">
             Open in editor
           </button>
-          <button
-            onClick={handleCopy}
-            className="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
-          >
+          <button onClick={handleCopy} className="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">
             {copied ? "Copied ✓" : "Copy"}
           </button>
-          <button
-            onClick={handleDownload}
-            className="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
-          >
+          <button onClick={handleDownload} className="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">
             Download
           </button>
         </div>
@@ -58,63 +48,89 @@ export function CodeBlock({ code, language, onCopyOnly, onOpenWorkspace }) {
   );
 }
 
-const EXT_LANGUAGE_MAP = {
-  html: "html", css: "css", js: "javascript", jsx: "javascript",
-  ts: "typescript", tsx: "typescript", py: "python", json: "json", md: "markdown",
-};
-
-function parseCodeBlocks(text) {
+function extractBlocksForWorkspace(text) {
   const blockRegex = /```([a-zA-Z]*)(?::([^\n`]+))?\n?([\s\S]*?)```/g;
   const blocks = [];
   let match;
   let counter = 0;
+  const EXT_MAP = { html: "html", css: "css", javascript: "js", js: "js", python: "py", json: "json", typescript: "ts" };
   while ((match = blockRegex.exec(text)) !== null) {
     const language = (match[1] || "").toLowerCase();
     const explicitName = match[2]?.trim();
     const code = match[3].trim();
     counter += 1;
-    const ext = Object.keys(EXT_LANGUAGE_MAP).find((k) => EXT_LANGUAGE_MAP[k] === language) || language || "txt";
-    const filename = explicitName || `file${counter}.${ext || "txt"}`;
-    blocks.push({ filename, language: language || "text", code, raw: match[0] });
+    const ext = EXT_MAP[language] || language || "txt";
+    const filename = explicitName || `file${counter}.${ext}`;
+    blocks.push({ filename, language, code });
   }
   return blocks;
 }
 
-export function FormattedText({ text, onOpenWorkspace }) {
-  const blocks = parseCodeBlocks(text);
-  const segments = text.split(/(```[a-zA-Z]*(?::[^\n`]+)?\n?[\s\S]*?```)/g);
+export function FormattedText({ text, images, onOpenWorkspace }) {
+  const blocks = extractBlocksForWorkspace(text);
   let blockIndex = 0;
 
   return (
-    <>
-      {segments.map((segment, i) => {
-        if (segment.startsWith("```")) {
-          const block = blocks[blockIndex];
-          blockIndex += 1;
-          if (!block) return null;
-          return (
-            <CodeBlock
+    <div className="fabion-markdown">
+      {images && images.length > 0 && (
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          {images.slice(0, 4).map((img, i) => (
+            <img
               key={i}
-              code={block.code}
-              language={block.language}
-              onOpenWorkspace={() => onOpenWorkspace(blocks, block.filename)}
+              src={typeof img === "string" ? img : img.url}
+              alt=""
+              className="w-full h-32 object-cover rounded-lg border border-zinc-800"
+              loading="lazy"
+              onError={(e) => (e.target.style.display = "none")}
             />
-          );
-        }
-        const boldParts = segment.split(/(\*\*[^*]+\*\*)/g);
-        return (
-          <span key={i}>
-            {boldParts.map((part, j) =>
-              part.startsWith("**") && part.endsWith("**") ? (
-                <strong key={j}>{part.slice(2, -2)}</strong>
-              ) : (
-                <span key={j}>{part}</span>
-              )
-            )}
-          </span>
-        );
-      })}
-    </>
+          ))}
+        </div>
+      )}
+      <ReactMarkdown
+        components={{
+          h1: (props) => <h1 className="text-xl font-semibold mt-4 mb-2" {...props} />,
+          h2: (props) => <h2 className="text-lg font-semibold mt-4 mb-2" {...props} />,
+          h3: (props) => <h3 className="text-base font-semibold mt-3 mb-1.5" {...props} />,
+          p: (props) => <p className="mb-3 leading-relaxed" {...props} />,
+          ul: (props) => <ul className="list-disc list-outside ml-5 mb-3 space-y-1" {...props} />,
+          ol: (props) => <ol className="list-decimal list-outside ml-5 mb-3 space-y-1" {...props} />,
+          li: (props) => <li className="leading-relaxed" {...props} />,
+          strong: (props) => <strong className="font-semibold text-white" {...props} />,
+          a: (props) => <a className="underline text-white hover:text-zinc-300 transition-colors" target="_blank" rel="noopener noreferrer" {...props} />,
+          table: (props) => (
+            <div className="overflow-x-auto my-3">
+              <table className="w-full text-left border-collapse text-sm" {...props} />
+            </div>
+          ),
+          th: (props) => <th className="border border-zinc-800 px-3 py-2 bg-zinc-900 font-medium" {...props} />,
+          td: (props) => <td className="border border-zinc-800 px-3 py-2" {...props} />,
+          code: ({ inline, className, children, ...props }) => {
+            if (inline) {
+              return (
+                <code className="bg-zinc-800 px-1.5 py-0.5 rounded text-[0.85em] font-mono" {...props}>
+                  {children}
+                </code>
+              );
+            }
+            const langMatch = /language-(\w+)/.exec(className || "");
+            const language = langMatch ? langMatch[1] : "";
+            const code = String(children).replace(/\n$/, "");
+            const block = blocks[blockIndex];
+            blockIndex += 1;
+            return (
+              <CodeBlock
+                code={code}
+                language={language || block?.language || ""}
+                onOpenWorkspace={() => onOpenWorkspace(blocks, block?.filename)}
+              />
+            );
+          },
+          pre: ({ children }) => <>{children}</>,
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    </div>
   );
 }
 
@@ -177,9 +193,7 @@ export function ModelDropdown({ persona, setPersona, effort, setEffort, thinking
                 setPersona(p.value);
                 setOpen(false);
               }}
-              className={`p-2 rounded-lg cursor-pointer flex justify-between items-center ${
-                persona === p.value ? "bg-zinc-800" : "hover:bg-zinc-800"
-              }`}
+              className={`p-2 rounded-lg cursor-pointer flex justify-between items-center ${persona === p.value ? "bg-zinc-800" : "hover:bg-zinc-800"}`}
             >
               <div>
                 <div className="font-medium">{p.label}</div>
@@ -192,11 +206,7 @@ export function ModelDropdown({ persona, setPersona, effort, setEffort, thinking
               )}
             </div>
           ))}
-
-          <div
-            onClick={() => setShowEffort(true)}
-            className="p-2 mt-1 border-t border-zinc-800 flex justify-between items-center cursor-pointer hover:bg-zinc-800 rounded-lg"
-          >
+          <div onClick={() => setShowEffort(true)} className="p-2 mt-1 border-t border-zinc-800 flex justify-between items-center cursor-pointer hover:bg-zinc-800 rounded-lg">
             <span className="font-medium">Effort</span>
             <span className="text-zinc-500 flex items-center gap-1">
               {activeEffort?.label}
@@ -210,19 +220,14 @@ export function ModelDropdown({ persona, setPersona, effort, setEffort, thinking
 
       {open && showEffort && (
         <div className="absolute bottom-full mb-2 left-0 w-64 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden z-50 p-2 text-[13px]">
-          <div
-            onClick={() => setShowEffort(false)}
-            className="p-2 text-zinc-500 cursor-pointer hover:bg-zinc-800 rounded-lg border-b border-zinc-800 mb-1"
-          >
+          <div onClick={() => setShowEffort(false)} className="p-2 text-zinc-500 cursor-pointer hover:bg-zinc-800 rounded-lg border-b border-zinc-800 mb-1">
             ← Back
           </div>
           {EFFORTS.map((e) => (
             <div
               key={e.value}
               onClick={() => setEffort(e.value)}
-              className={`p-2 rounded-lg cursor-pointer flex justify-between items-center ${
-                effort === e.value ? "bg-zinc-800" : "hover:bg-zinc-800"
-              }`}
+              className={`p-2 rounded-lg cursor-pointer flex justify-between items-center ${effort === e.value ? "bg-zinc-800" : "hover:bg-zinc-800"}`}
             >
               <span>
                 {e.label}
@@ -235,26 +240,17 @@ export function ModelDropdown({ persona, setPersona, effort, setEffort, thinking
               )}
             </div>
           ))}
-
           <div className="p-2 mt-1 border-t border-zinc-800 flex items-center justify-between">
             <div>
               <div className="font-medium">Thinking</div>
-              <div className="text-zinc-500 text-xs">
-                {isReasoningCapable ? "Show reasoning steps" : "Requires Extra or Max effort"}
-              </div>
+              <div className="text-zinc-500 text-xs">{isReasoningCapable ? "Show reasoning steps" : "Requires Extra or Max effort"}</div>
             </div>
             <button
               onClick={() => isReasoningCapable && setThinking(!thinking)}
               disabled={!isReasoningCapable}
-              className={`w-10 h-5.5 rounded-full transition-colors relative shrink-0 ${
-                thinking && isReasoningCapable ? "bg-white" : "bg-zinc-700"
-              } ${!isReasoningCapable ? "opacity-40 cursor-not-allowed" : ""}`}
+              className={`w-10 h-5.5 rounded-full transition-colors relative shrink-0 ${thinking && isReasoningCapable ? "bg-white" : "bg-zinc-700"} ${!isReasoningCapable ? "opacity-40 cursor-not-allowed" : ""}`}
             >
-              <div
-                className={`w-4 h-4 rounded-full absolute top-0.5 transition-transform ${
-                  thinking && isReasoningCapable ? "translate-x-5 bg-black" : "translate-x-0.5 bg-white"
-                }`}
-              />
+              <div className={`w-4 h-4 rounded-full absolute top-0.5 transition-transform ${thinking && isReasoningCapable ? "translate-x-5 bg-black" : "translate-x-0.5 bg-white"}`} />
             </button>
           </div>
         </div>
@@ -271,9 +267,7 @@ export function ChatListItem({ chat, isActive, onSelect, onRename, onDelete }) {
 
   useEffect(() => {
     function handleClickOutside(e) {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setMenuOpen(false);
-      }
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -302,47 +296,19 @@ export function ChatListItem({ chat, isActive, onSelect, onRename, onDelete }) {
   }
 
   return (
-    <div
-      className={`group relative flex items-center rounded-lg mb-1 transition-colors ${
-        isActive ? "bg-zinc-800" : "hover:bg-zinc-900"
-      }`}
-    >
-      <button
-        onClick={() => onSelect(chat.id)}
-        className={`flex-1 text-left px-3 py-2 text-xs truncate ${
-          isActive ? "text-white font-medium" : "text-zinc-400"
-        }`}
-      >
+    <div className={`group relative flex items-center rounded-lg mb-1 transition-colors ${isActive ? "bg-zinc-800" : "hover:bg-zinc-900"}`}>
+      <button onClick={() => onSelect(chat.id)} className={`flex-1 text-left px-3 py-2 text-xs truncate ${isActive ? "text-white font-medium" : "text-zinc-400"}`}>
         {chat.title}
       </button>
-      <button
-        onClick={() => setMenuOpen(!menuOpen)}
-        className="px-2 opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-white transition-opacity"
-      >
+      <button onClick={() => setMenuOpen(!menuOpen)} className="px-2 opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-white transition-opacity">
         ⋯
       </button>
-
       {menuOpen && (
-        <div
-          ref={menuRef}
-          className="absolute right-0 top-full mt-1 w-32 bg-zinc-900 border border-zinc-800 rounded-lg shadow-lg z-50 overflow-hidden"
-        >
-          <button
-            onClick={() => {
-              setRenaming(true);
-              setMenuOpen(false);
-            }}
-            className="w-full text-left px-3 py-2 text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
-          >
+        <div ref={menuRef} className="absolute right-0 top-full mt-1 w-32 bg-zinc-900 border border-zinc-800 rounded-lg shadow-lg z-50 overflow-hidden">
+          <button onClick={() => { setRenaming(true); setMenuOpen(false); }} className="w-full text-left px-3 py-2 text-xs text-zinc-300 hover:bg-zinc-800 transition-colors">
             Rename
           </button>
-          <button
-            onClick={() => {
-              setMenuOpen(false);
-              onDelete(chat.id);
-            }}
-            className="w-full text-left px-3 py-2 text-xs text-red-400 hover:bg-red-950/40 transition-colors"
-          >
+          <button onClick={() => { setMenuOpen(false); onDelete(chat.id); }} className="w-full text-left px-3 py-2 text-xs text-red-400 hover:bg-red-950/40 transition-colors">
             Delete
           </button>
         </div>
