@@ -41,7 +41,9 @@ const EFFORT_MODEL_MAP = {
   extra: "deepseek-r1-distill-llama-70b",
   max: "deepseek-r1-distill-llama-70b",
 };
-
+const PERSONA_MODEL_OVERRIDE = {
+  kimi: "moonshotai/kimi-k2-instruct-0905",
+};
 function getCurrentDateContext() {
   const now = new Date();
   const formatted = now.toLocaleDateString("en-US", {
