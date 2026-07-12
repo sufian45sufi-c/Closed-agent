@@ -64,6 +64,10 @@ export default function SearchFab() {
     }
   };
 
+  const openResult = (url) => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   if (checking) return null;
 
   return (
@@ -146,17 +150,17 @@ export default function SearchFab() {
           {results && results.length > 0 && (
             <div className="space-y-6">
               {results.map((r, i) => (
-                
+                <div
                   key={i}
-                  href={r.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block border border-zinc-800 rounded-xl p-5 hover:border-zinc-600 transition-colors"
+                  onClick={() => openResult(r.url)}
+                  role="link"
+                  tabIndex={0}
+                  className="block border border-zinc-800 rounded-xl p-5 hover:border-zinc-600 transition-colors cursor-pointer"
                 >
                   <div className="text-xs text-zinc-500 mb-1 truncate">{r.url}</div>
                   <div className="text-base font-medium mb-2 text-white">{r.title}</div>
                   <div className="text-sm text-zinc-400 leading-relaxed">{r.snippet}</div>
-                </a>
+                </div>
               ))}
             </div>
           )}
