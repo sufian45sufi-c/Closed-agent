@@ -3,7 +3,7 @@ import Groq from "groq-sdk";
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const rateLimitStore = new Map();
-const MAX_PER_MINUTE = 50;
+const MAX_PER_MINUTE = 10;
 const MAX_PER_DAY = 150;
 
 function checkRateLimit(userId) {
