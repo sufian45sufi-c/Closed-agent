@@ -35,7 +35,7 @@ function checkRateLimit(userId) {
 }
 
 const EFFORT_MODEL_MAP = {
-  low: "llama-3.1-8b-instant",
+  low: "llama-3.3-70b-versatile",
   medium: "llama-3.3-70b-versatile",
   high: "llama-3.3-70b-versatile",
   extra: "deepseek-r1-distill-llama-70b",
@@ -50,44 +50,27 @@ function getCurrentDateContext() {
     month: "long",
     day: "numeric",
   });
-  return `Today's real date is ${formatted}. Your internal training data has a cutoff earlier than today, so your default sense of "the current year" or "the latest" anything is very likely out of date. Always trust this stated date over your own assumptions. Do not correct or contradict the user about the current date. Use the web_search tool whenever a question depends on current information.`;
+  return `Today's real date is ${formatted}. Your internal training data has a cutoff earlier than today. Always trust this stated date over your own assumptions.`;
 }
 
 const FORMATTING_INSTRUCTIONS = `
-Formatting rules you must always follow, regardless of persona:
-- Use standard markdown: **bold** for key terms, headers (##) for sections in longer answers, bullet or numbered lists when comparing multiple items, tables when comparing structured data, and [text](url) for links when citing sources.
-- Only use a fenced code block when the content is genuinely source code, a config file, or a command.
-- Every real code block must be fenced with its language.
-- If the user has attached a file, its contents appear wrapped in [FILE: filename] ... [/FILE] tags — treat as reference material unless asked to act on it.
-- When using web search results, cite naturally with markdown links, never fabricate a URL or fact not present in the results.
+Formatting rules:
+- Use standard markdown: **bold**, headers (##), lists, tables, [text](url) links.
+- Only use fenced code blocks for genuine source code, config files, or commands — never for narrating what a tool call would look like.
+- CRITICAL: If you decide to use a tool (web_search or browser_action), you must call it as an actual function call. NEVER write out what the function call would look like as text or code in your response — that does nothing and confuses the user. If you're using a tool, just call it silently; do not describe the call itself, only report the real result afterward.
+`;
 
-Tone and emoji rules:
-- Outside of coding tasks, write like a warm, genuine person having a real conversation.
-- Emojis: at most one per message, only when it genuinely fits, never in technical/code explanations.
-- Casual questions get a natural, personable tone. Code tasks get precise, technical, emoji-free responses.
+const TOOL_USE_RULES = `
+Tool use rules — follow strictly:
+- If the user asks you to visit, browse, open, navigate to, click on, fill in, or interact with a specific website, "chromium", or "the browser", you MUST call the browser_action function directly. Do not just describe what you would do.
+- If the user asks about current events, prices, recent news, or anything time-sensitive, you MUST call web_search directly. Do not guess from memory.
+- After calling a tool, wait for its real result before writing your response. Never fabricate what a tool "would" return.
 `;
 
 const PERSONA_PROMPTS = {
-  thread: `You are Thread 1.0, Fabion's ultra-fast model.
-
-For casual or conversational questions: be quick, warm, and natural — like a sharp friend who gives you the real answer immediately, no fluff.
-For anything code-related: switch immediately into precise, technical, no-nonsense mode.
-Never open with "Sure!" or "Great question." Start directly with the answer either way.
-Use web search when the question depends on current or fast-changing information. Use the browser_action tool when the user wants you to actually visit, navigate, or interact with a specific website live.`,
-
-  pixel: `You are Pixel 1.0, Fabion's senior full-stack engineering specialist, with deep expertise across backend and frontend.
-
-For casual questions: be genuinely friendly and natural.
-For coding tasks, switch fully into technical mode: correct, idiomatic, production-quality code, declared language in fenced blocks, brief approach before code and tradeoffs after, no emojis or casual tone while working on code.
-Use web search for current library versions or recent changes you're not fully certain about.
-Use the browser_action tool when the user wants you to actually visit or interact with a live website (e.g. testing a deployed page, checking a specific site's current layout).`,
-
-  cell: `You are Cell 1.0, Fabion's creative and multi-step reasoning model.
-
-For casual, creative, or open-ended questions: be warm, thoughtful, and genuinely engaged.
-For complex requests, work through the problem in clear stages, considering more than one angle before committing.
-If the conversation shifts into code, tone down the casualness and be precise instead.
-Use web search for research-heavy or current-events questions. Use the browser_action tool when the user wants you to actually browse or interact with a live website.`,
+  thread: `You are Thread 1.0, Fabion's ultra-fast model. For casual questions: quick, warm, natural. For code: precise, technical, no fluff. Never open with "Sure!" — start directly with the answer.`,
+  pixel: `You are Pixel 1.0, Fabion's senior full-stack engineering specialist. Casual questions: friendly and natural. Coding tasks: correct, idiomatic, production-quality code, declared language in fenced blocks, brief approach before code and tradeoffs after, no emojis while coding.`,
+  cell: `You are Cell 1.0, Fabion's creative and multi-step reasoning model. Casual/creative questions: warm and thoughtful. Complex requests: work through stages, consider multiple angles. Code: precise, no casualness.`,
 };
 
 const tools = [
@@ -95,7 +78,7 @@ const tools = [
     type: "function",
     function: {
       name: "web_search",
-      description: "Search the live web for current information, news, facts, or images related to the query.",
+      description: "Search the live web for current information, news, facts, or images. Call this directly — do not describe it.",
       parameters: {
         type: "object",
         properties: {
@@ -109,15 +92,11 @@ const tools = [
     type: "function",
     function: {
       name: "browser_action",
-      description: "Control a real, live web browser session. Use this to navigate to specific pages, click elements, fill forms, or interact with a website directly, rather than just searching. The browser view is visible to the user in real time.",
+      description: "Control a real, live web browser session — navigate, click, type, or scroll. Call this directly whenever the user wants you to actually visit or interact with a website. Do not describe this call as text or code — actually invoke it.",
       parameters: {
         type: "object",
         properties: {
-          type: {
-            type: "string",
-            enum: ["navigate", "click", "type", "scroll"],
-            description: "The browser action to perform.",
-          },
+          type: { type: "string", enum: ["navigate", "click", "type", "scroll"], description: "The browser action to perform." },
           url: { type: "string", description: "URL to navigate to (required for 'navigate')." },
           selector: { type: "string", description: "CSS selector for the element (required for 'click' and 'type')." },
           text: { type: "string", description: "Text to type (required for 'type')." },
@@ -152,6 +131,11 @@ async function performBrowserAction(args, userId, req) {
   return res.json();
 }
 
+function detectsBrowserIntent(text) {
+  const t = text.toLowerCase();
+  return /\b(open chromium|open the browser|navigate to|go to (the )?website|browse to|visit (the )?site|click on|fill in|open google|open youtube)\b/.test(t);
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -180,10 +164,13 @@ export default async function handler(req, res) {
   const isReasoningModel = effort === "extra" || effort === "max";
   const personaPrompt = PERSONA_PROMPTS[persona] || PERSONA_PROMPTS.pixel;
 
-  let systemContent = `${personaPrompt}\n\n${getCurrentDateContext()}\n\n${FORMATTING_INSTRUCTIONS}`;
+  let systemContent = `${personaPrompt}\n\n${getCurrentDateContext()}\n\n${TOOL_USE_RULES}\n\n${FORMATTING_INSTRUCTIONS}`;
   if (memorySummary && memorySummary.trim()) {
     systemContent += `\n\nWhat you remember about this user from previous conversations:\n${memorySummary}`;
   }
+
+  const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
+  const shouldForceBrowser = lastUserMessage && detectsBrowserIntent(lastUserMessage.content);
 
   res.writeHead(200, {
     "Content-Type": "text/plain; charset=utf-8",
@@ -198,7 +185,9 @@ export default async function handler(req, res) {
       messages: workingMessages,
       model,
       tools,
-      tool_choice: "auto",
+      tool_choice: shouldForceBrowser
+        ? { type: "function", function: { name: "browser_action" } }
+        : "auto",
     });
 
     const choice = firstPass.choices[0];
@@ -243,6 +232,11 @@ export default async function handler(req, res) {
       }
 
       res.write("\u0005");
+    } else if (shouldForceBrowser) {
+      // Model was forced to call browser_action but somehow didn't — surface this honestly instead of pretending
+      res.write("I wasn't able to open the browser for that request. Try rephrasing, or use the Chromium button in the header to open it manually.");
+      res.end();
+      return;
     }
 
     const requestParams = { messages: workingMessages, model, stream: true };
