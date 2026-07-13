@@ -29,30 +29,21 @@ async function getOrCreateSandbox(sessionId) {
     { path: "package.json", content: Buffer.from(PACKAGE_JSON, "utf-8") },
   ]);
 
-  // Install locally (not -g), so `require('playwright-core')` resolves correctly
-  // relative to the script's working directory.
-  const install = await sandbox.runCommand({
-    cmd: "npm",
-    args: ["install"],
-  });
-
+  const install = await sandbox.runCommand({ cmd: "npm", args: ["install"] });
   if (install.exitCode !== 0) {
     const errText = await install.stderr();
     throw new Error("Failed to install playwright-core: " + errText.slice(0, 800));
   }
 
-  // Playwright's Chromium binary must also be downloaded — playwright-core alone
-  // doesn't bundle it. Install it via the playwright CLI that ships with playwright-core.
+  // Without --with-deps (which needs sudo/apt and can fail silently) — just get the Chromium binary itself.
   const installBrowser = await sandbox.runCommand({
     cmd: "npx",
-    args: ["playwright", "install", "--with-deps", "chromium"],
+    args: ["playwright", "install", "chromium"],
   });
 
   if (installBrowser.exitCode !== 0) {
     const errText = await installBrowser.stderr();
-    console.error("Chromium install warning:", errText.slice(0, 800));
-    // Don't throw here — some sandboxes may already have a compatible browser cached,
-    // and --with-deps can fail on permissions while the browser itself still installs fine.
+    throw new Error("Failed to install Chromium browser: " + errText.slice(0, 800));
   }
 
   activeSandboxes.set(sessionId, { sandbox, createdAt: Date.now() });
@@ -94,18 +85,13 @@ const action = JSON.parse(process.argv[2]);
 })();
 `;
 
-// Ensures a valid URL — the AI sometimes sends a search phrase instead of a real URL,
-// which previously caused "Navigating to https://Fifa world cup..." nonsense.
 function normalizeUrl(input) {
   if (!input) return null;
   let url = input.trim();
 
-  // If it already looks like a domain/URL, just ensure the protocol
   if (/^https?:\/\//i.test(url)) return url;
   if (/^[a-z0-9-]+\.[a-z]{2,}(\/.*)?$/i.test(url)) return "https://" + url;
 
-  // Otherwise this looks like a search phrase, not a URL — route it through a real search
-  // engine's query URL instead of failing outright.
   return "https://www.google.com/search?q=" + encodeURIComponent(url);
 }
 
